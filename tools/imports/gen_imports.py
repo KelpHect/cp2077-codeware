@@ -185,6 +185,12 @@ def scan_declared_scripts(scripts_dir, skip_dirs):
     return names
 
 
+# importonly types the dump cannot tell apart and no earlier tree knew: the engine's own script validator named them
+# (game 2.5 exe 3.0.88.46235, red4ext log: "Script validation error: Class '<name>' has to be declared in scripts as
+# 'importonly'"). Both are new in 2.5.
+VALIDATOR_IMPORTONLY = {"gameBufferSlice", "gameSavedStatsDataOptimized"}
+
+
 class Hints:
     """Facts an earlier generated tree knows and the dump does not."""
 
@@ -509,7 +515,7 @@ class Gen:
         c = self.r.classes[n]
         s = self.class_name(n)
         struct = self.is_struct(n)
-        mods = (["abstract"] if c["abs"] else []) + ["importonly" if s in self.h.importonly else "native"]
+        mods = (["abstract"] if c["abs"] else []) + ["importonly" if (s in self.h.importonly or s in VALIDATOR_IMPORTONLY) else "native"]
         head = f"public {' '.join(mods)} {'struct' if struct else 'class'} {s}"
         inherited = struct and bool(c["parent"])
         if struct:
